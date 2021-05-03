@@ -1,0 +1,69 @@
+# My Little Render Farm example_project.yaml.
+# Copy and rename this file to create your render farm project.
+
+{
+  # The AMI section specifies how to build the Amazon Machine Image for render nodes.
+  ami: {
+    # The ID of AMI image for render nodes. When this is set to 'UNINTIALISED'
+    # My Little Render Farm will create one and store its ID back in this field.
+    ami_id: UNINTIALISED,
+    # The Blender image which will be built into the AMI
+    blender_image: https://download.blender.org/release/Blender2.92/blender-2.92.0-linux64.tar.xz
+  },
+  # The project section specifies the source files for the project. These will be copied up to the
+  # staging bucket on each run - they are not built into the AMI.
+  # Paths are specified relative to the location of this yaml file.
+  project: {
+    # This is the main blend file for the project.
+    main_blend: example.blend,
+    # The resource files to include.  These files can only be in or below the project
+    # directory so, for instance, if your project includes texture files from elsewhere on
+    # your system you will have to copy them into your project or link them and adjust your
+    # blend file accordingly. You can specify individual files or wildcards, use '**' to mean
+    # 'every directory path below here'.
+    resources:
+      - textures/**/*.png,
+      - image/foo.jpg
+
+    # This is the compositor blend file. If set to 'DEFAULT' My Little Render Farm will use
+    # a standard default.
+    composite_blend: DEFAULT,
+    # The frame rate for the compositor.
+    composite_fps: 30,
+    # The pixel size of the composite output.
+    composite_size: {
+      width: 1920,
+      height: 1080
+    }
+  },
+  # The render job details
+  render: {
+    # The start and end frame numbers.
+    start_frame: 1,
+    end_frame: 1,
+    # Whether or not to run the compositor in this execution.
+    run_compositor: false,
+    # The render engine to use.  Currently only accepts CYCLES, BLENDER_EEVEE
+    engine: CYCLES,
+    # Any extra flags to pass into the render job
+    extra_flags: {
+      cycles-device: OPTIX
+    }
+    # The instances section specifies the EC2 instance types that the stack is
+    # allowed to spin up for this run.  Be aware that some instances types are expensive
+    # to run for any length of time. See https://aws.amazon.com/ec2/instance-types/ for a fuller
+    # description.
+    # If you set the render.engine type to BLENDER_EEVEE then My Little Render Farm will
+    # exclude all the types that don't include GPU resource. (Eevee is built on OpenGL so
+    # running it without a GPU is difficult and pointless.)
+    # The small and very small instance types would probably not succeed in running your project.
+    # At present My Little Render Farm only supports X86/Linux machines
+
+    instances: {
+      # a small subset of types to use
+      types: [ t3.medium, t3.large, g3s.xlarge, p2.xlarge, p3.2xlarge ]
+    }
+  }
+
+
+}
