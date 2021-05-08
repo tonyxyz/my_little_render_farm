@@ -12,10 +12,8 @@ class KeyPairFactory:
     ec2 = boto3.client('ec2')
     try:
       pairs = ec2.describe_key_pairs(KeyNames=[self.key_pair_name])
-      print(f'key pairs: #{pairs}')
     except botocore.exceptions.ClientError as error:
       if error.response["Error"]["Code"] == 'InvalidKeyPair.NotFound':
-        print("the key pair does not exist")
         exists = False
       else:
         throw(error)

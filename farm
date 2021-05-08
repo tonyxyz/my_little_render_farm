@@ -7,10 +7,9 @@ import os
 from mlrf.project_info import ProjectInfo
 from mlrf.arguments import arguments_parse
 from mlrf.key_pair_factory import KeyPairFactory
-from mlrf.ami_factory import AMIFactory
-from mlrf.bucket_factory import BucketFactory
 from mlrf.stack_factory import StackFactory
 from mlrf.bucket_accessor import BucketAccessor
+from mlrf.log import set_verbose, log, log_verbose
 
 SECURITY_GROUP = 'RENDERER_SEQ_GP'
 INSTANCE_INIT_SCRIPT = """
@@ -23,30 +22,13 @@ INSTANCE_INIT_SCRIPT = """
 def create_key_pair_if_req(project_info):
   factory = KeyPairFactory(project_info)
   if not factory.keyExists():
-    print (f'key {project_info.key_pair_name()} does not exist yet')
+    log_verbose(f'key {project_info.key_pair_name()} does not exist yet')
     factory.create_and_save_key_pair()
-
-  print(f'create key pair if req. name: {project_info.key_pair_name()}, dir: {project_info.directory()}')
 
 def info_text():
   with open('./info.txt') as info_file:
     info = info_file.read()
   return info
-
-def delete_ami(project_info):
-  print('delete AMI')
-
-def create_ami_if_req(project_info):
-  print('create AMI')
-  create_key_pair_if_req(project_info)
-  # instances = ec2.create_instances(
-  #     ImageId=project['ami']['root_ami_id'],
-  #     MinCount=1,
-  #     MaxCount=1,
-  #     InstanceType='t2.micro',
-  #     KeyName='tunasoniq-render-keypair',
-  #     UserData=INSTANCE_INIT_SCRIPT
-  #   )
 
 def create_s3_bucket_if_req(project_info):
   factory = BucketFactory(project_info)
@@ -54,18 +36,14 @@ def create_s3_bucket_if_req(project_info):
 
 if __name__ == '__main__':
   args = arguments_parse(info_text())
+  set_verbose(args.verbose)
+  log_verbose('verbose logging enabled.')
+  log_verbose(f'reading project from "{args.project_file}"')
   project_info = ProjectInfo(args.project_file)
 
-
-
-  # if args.delete_ami:
-  #   delete_ami(project_info)
-  # if args.create_ami:
-  #   create_ami_if_req(project_info)
-
   if args.run:
-    # stack_factory = StackFactory(project_info)
-    # stack_factory.create_or_update()
+    stack_factory = StackFactory(project_info)
+    stack_factory.create_or_update()
     bucket_accessor = BucketAccessor(project_info)
     bucket_accessor.upload_project()
 

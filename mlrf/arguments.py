@@ -10,6 +10,10 @@ def arguments_parse(epilog_text):
   main_group.add_argument("-p", "--project_file",
     help="the project filename or filepath",
     default="example/project.yaml")
+  main_group.add_argument("-v", "--verbose",
+      help="switch on verbose output.",
+      action= "store_true"
+    )
   project_actions_group = parser.add_mutually_exclusive_group()
   project_actions_group.add_argument("-s", "--stop",
       help="stop the EC2 servers and place the farm in a stopped state",
@@ -23,6 +27,7 @@ def arguments_parse(epilog_text):
       help="stop the EC2 servers if running and tear down the stack - INCLUDING THE RENDER OUTPUT BUCKET!",
       action= "store_true"
     )
+
 
 
   return parser.parse_args()

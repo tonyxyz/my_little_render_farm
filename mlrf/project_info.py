@@ -47,9 +47,6 @@ class ProjectInfo:
   def project_files_local(self):
     list = [ self.project_data['project']['main_blend'] ]
     for r in self.project_data['project']['resources']:
-      print(f'resource line: {self.project_root() + r}')
       for n in glob.iglob(self.project_root() + r, recursive=True):
-        print(f'==="{n}"')
         list.append(n[len(self.project_root()):])
-    print(list)
     return list

@@ -4,17 +4,7 @@ from botocore.client import Config
 import json
 from ruamel.yaml import YAML
 from ruamel.yaml.compat import StringIO
-
-class LocalYAML(YAML):
-  def dump(self, data, stream=None, **kw):
-    inefficient = False
-    if stream is None:
-      inefficient = True
-      stream = StringIO()
-    YAML.dump(self, data, stream, **kw)
-    if inefficient:
-      return stream.getvalue()
-
+from mlrf.log import log, log_verbose
 
 # Stack consists of:
 #   bucket
@@ -30,13 +20,11 @@ class StackFactory:
 
   def get_current_user_arn(self):
     user_identity = boto3.client('sts').get_caller_identity()
-    print(user_identity)
     return user_identity['Arn']
 
   def get_current_user_name(self):
     user_identity = boto3.client('sts').get_caller_identity()
     username = user_identity['Arn'].split('/')[1]
-    print(f'username : "{username}"')
     return username
 
   # def get_current_user_id(self):
@@ -83,16 +71,14 @@ Resources:
               Fn::Join: ['', ['arn:aws:s3:::',{{Ref: mlrfIOBucket}}, '/*' ]]
 '''
 # PolicyName: my-little-render-farm-bucket-policy
-    print(f'template: {self.template}')
-
-
+    log_verbose(f'template: {self.template}')
 
   def create_or_update(self):
     client = boto3.client('cloudformation')
     try:
       response = client.validate_template(TemplateBody=self.template)
     except ClientError as error:
-      print('There was an error whilst validating the stack.')
+      log('There was an error whilst validating the stack.')
       raise error
 
     try:
@@ -101,12 +87,11 @@ Resources:
         TemplateBody=self.template,
         Capabilities=['CAPABILITY_NAMED_IAM']
       )
+    except client.exceptions.AlreadyExistsException:
+      log(f'the stack "{self.project_info.stack_name()}" already exists - skipping stack creation.')
     except ClientError as error:
-      print('There was an error whilst creating the stack.')
+      log('There was an error whilst creating the stack.')
       raise error
-
-    if wants_update:
-      self.update()
 
 
 
