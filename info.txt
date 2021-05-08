@@ -1,20 +1,19 @@
 My Little Render Farm will set up and run a little render farm on AWS for a
 single Blender project. You can choose the number and type of EC2 server instances
-it will run on. By default it will stop each instance once it has done its job,
-output is deposited in an S3 bucket.
+it will run on.
 
 Normally your project will render to separate frames. Once all the frames have
-been rendered your can run the the included compose.blend file to create a movie
-file or you can include your own composition blend file if needed.
-
-The composition stage is not run if your project has a single frame.
+been rendered My Little Render Farm will run a compositor blend file if instructed.
+The default composite.blend simply joins all the frames together into a movie at the
+project frame resolution size.  You can include your own compositor to take additional
+steps if required.
 
 You will need to have the following before getting started:
 
   * a basic understanding of AWS, including EC2, IAM, S3, CloudFormation
   * an AWS account
   * an AWS IAM identity with sufficient permissions to manage CloudFormation stacks
-  * Python 3, pip and pipenv
+  * Python 3, pip and pipenv on your workstation
 
 Create a copy of the included example/project.yaml and edit it to do what you want.
 The example project is heavily annotated to explain exactly what it is doing.

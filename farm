@@ -1,45 +1,75 @@
 #!/usr/bin/env python
 import boto3
-import argparse
+
+import os
+
+
+from mlrf.project_info import ProjectInfo
+from mlrf.arguments import arguments_parse
+from mlrf.key_pair_factory import KeyPairFactory
+from mlrf.ami_factory import AMIFactory
+from mlrf.bucket_factory import BucketFactory
+from mlrf.stack_factory import StackFactory
+from mlrf.bucket_accessor import BucketAccessor
+
+SECURITY_GROUP = 'RENDERER_SEQ_GP'
+INSTANCE_INIT_SCRIPT = """
+    yum update
+    wget https://download.blender.org/release/Blender2.92/blender-2.92.0-linux64.tar.xz
+    echo 'downloaded blender'
+    tar -xf ./blender-2.92.0-linux64.tar.xz
+    echo 'untarred blender'
+  """
+def create_key_pair_if_req(project_info):
+  factory = KeyPairFactory(project_info)
+  if not factory.keyExists():
+    print (f'key {project_info.key_pair_name()} does not exist yet')
+    factory.create_and_save_key_pair()
+
+  print(f'create key pair if req. name: {project_info.key_pair_name()}, dir: {project_info.directory()}')
 
 def info_text():
   with open('./info.txt') as info_file:
     info = info_file.read()
   return info
 
+def delete_ami(project_info):
+  print('delete AMI')
+
+def create_ami_if_req(project_info):
+  print('create AMI')
+  create_key_pair_if_req(project_info)
+  # instances = ec2.create_instances(
+  #     ImageId=project['ami']['root_ami_id'],
+  #     MinCount=1,
+  #     MaxCount=1,
+  #     InstanceType='t2.micro',
+  #     KeyName='tunasoniq-render-keypair',
+  #     UserData=INSTANCE_INIT_SCRIPT
+  #   )
+
+def create_s3_bucket_if_req(project_info):
+  factory = BucketFactory(project_info)
+  return factory.create_bucket()
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser(
-      description="Set up and run a single use render farm for Blender on AWS.",
-      epilog=info_text(),
-      formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-  main_group = parser.add_argument_group()
-  main_group.add_argument("-p", "--project_file",
-    help="the project filename or filepath",
-    default="example/project.yaml")
-  project_actions_group = parser.add_mutually_exclusive_group()
-  project_actions_group.add_argument("-s", "--stop",
-      help="stop the EC2 servers and place the farm in a stopped state",
-      action="store_true"
-    )
-  project_actions_group.add_argument("-r", "--restart",
-      help="restart the EC2 servers and place the farm in a running state",
-      action= "store_true"
-    )
-  project_actions_group.add_argument("-k", "--kill",
-      help="stop the EC2 servers if running and tear down the stack - INCLUDING THE RENDER OUTPUT BUCKET!",
-      action= "store_true"
-    )
-  create_ami_group = parser.add_mutually_exclusive_group()
-  create_ami_group.add_argument("-c", "--create-ami",
-      help="create the Amazon Machine Image for your farm",
-      action="store_true")
-  delete_ami_group = parser.add_mutually_exclusive_group()
-  delete_ami_group.add_argument("-d", "--delete-ami",
-      help="delete the specified Amazon Machine Image id, or the id in the project file",
-      action="store_true",
-      default="USE_PROJECTFILR")
+  args = arguments_parse(info_text())
+  project_info = ProjectInfo(args.project_file)
 
 
-  args = parser.parse_args()
+
+  # if args.delete_ami:
+  #   delete_ami(project_info)
+  # if args.create_ami:
+  #   create_ami_if_req(project_info)
+
+  if args.run:
+    # stack_factory = StackFactory(project_info)
+    # stack_factory.create_or_update()
+    bucket_accessor = BucketAccessor(project_info)
+    bucket_accessor.upload_project()
+
+
+
+
+
