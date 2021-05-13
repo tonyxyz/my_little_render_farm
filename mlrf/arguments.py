@@ -20,11 +20,19 @@ def arguments_parse(epilog_text):
       action="store_true"
     )
   project_actions_group.add_argument("-r", "--run",
-      help="run or restart rendering and place the farm in a running state",
+      help="run or restart. this first syncs the project files up to the farm and then starts rendering",
+      action= "store_true"
+    )
+  project_actions_group.add_argument("-c", "--create_stack",
+      help="create stack, once created you can start rendering with --run. ",
       action= "store_true"
     )
   project_actions_group.add_argument("-k", "--kill",
       help="stop the EC2 servers if running and tear down the stack - INCLUDING THE RENDER OUTPUT BUCKET!",
+      action= "store_true"
+    )
+  project_actions_group.add_argument("-ck", "--create_key_pair",
+      help="creates a key pair for ssh access",
       action= "store_true"
     )
 

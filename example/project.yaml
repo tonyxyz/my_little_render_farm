@@ -21,7 +21,7 @@ ami:
   blender_image: https://download.blender.org/release/Blender2.92/blender-2.92.0-linux64.tar.xz
   # The name of key pair to be embedded. If there is no my_key_pair.pem in the project
   # directory one will be created.
-  key_pair_name: my_key_pair
+  key_pair_name: mlrf
 
 # The project section specifies the source files for the project. These will be copied up to the
 # staging bucket on the first run - they are not built into the AMI.

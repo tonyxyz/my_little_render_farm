@@ -11,17 +11,12 @@ from mlrf.stack_factory import StackFactory
 from mlrf.bucket_accessor import BucketAccessor
 from mlrf.log import set_verbose, log, log_verbose
 
-SECURITY_GROUP = 'RENDERER_SEQ_GP'
-INSTANCE_INIT_SCRIPT = """
-    yum update
-    wget https://download.blender.org/release/Blender2.92/blender-2.92.0-linux64.tar.xz
-    echo 'downloaded blender'
-    tar -xf ./blender-2.92.0-linux64.tar.xz
-    echo 'untarred blender'
-  """
+
 def create_key_pair_if_req(project_info):
   factory = KeyPairFactory(project_info)
-  if not factory.keyExists():
+  if factory.keyExists():
+    log_verbose(f'key {project_info.key_pair_name()} already exists in AWS account and will not be created')
+  else:
     log_verbose(f'key {project_info.key_pair_name()} does not exist yet')
     factory.create_and_save_key_pair()
 
@@ -30,9 +25,10 @@ def info_text():
     info = info_file.read()
   return info
 
-def create_s3_bucket_if_req(project_info):
-  factory = BucketFactory(project_info)
-  return factory.create_bucket()
+def upload_project(project_info):
+  bucket_accessor = BucketAccessor(project_info)
+  bucket_accessor.upload_project()
+  bucket_accessor.upload_instance_code()
 
 if __name__ == '__main__':
   args = arguments_parse(info_text())
@@ -40,12 +36,20 @@ if __name__ == '__main__':
   log_verbose('verbose logging enabled.')
   log_verbose(f'reading project from "{args.project_file}"')
   project_info = ProjectInfo(args.project_file)
+  log_verbose(f'project directory is {project_info.directory()}')
 
-  if args.run:
+  if args.create_key_pair:
+    create_key_pair_if_req(project_info)
+
+  if args.create_stack:
     stack_factory = StackFactory(project_info)
     stack_factory.create_or_update()
-    bucket_accessor = BucketAccessor(project_info)
-    bucket_accessor.upload_project()
+
+  if args.run:
+    upload_project(project_info)
+
+
+
 
 
 

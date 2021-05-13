@@ -16,7 +16,11 @@ class ProjectInfo:
       yaml.dump(self.project_data, yaml_file)
 
   def directory(self):
-    return os.path.dirname(os.path.abspath(self.project_file_path))
+    configured_directory = self.project_data['project'].get('project_root')
+    if configured_directory is None:
+      return os.path.dirname(os.path.abspath(self.project_file_path))
+    else:
+      return os.path.dirname(os.path.abspath(configured_directory))
 
   def key_pair_name(self):
     return self.project_data['ami']['key_pair_name']
@@ -50,3 +54,6 @@ class ProjectInfo:
       for n in glob.iglob(self.project_root() + r, recursive=True):
         list.append(n[len(self.project_root()):])
     return list
+
+  def root_ami_id(self):
+    return self.project_data['ami']['root_ami_id']
